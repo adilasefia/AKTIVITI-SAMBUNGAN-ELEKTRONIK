@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arduino Ultrasonic Wiring Lab</title>
+<style>
+:root{--navy:#10213b;--blue:#2563eb;--teal:#0f9d91;--ink:#17243a;--muted:#64748b;--line:#d9e2ef;--bg:#eef3f9}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(120deg,#10213b,#174b72);color:white;padding:22px clamp(16px,4vw,42px);box-shadow:0 5px 20px #10213b22}
+h1{margin:0;font-size:clamp(22px,3vw,32px)}header p{margin:7px 0 0;color:#dbeafe;font-size:14px}
+main{max-width:1250px;margin:auto;padding:20px 16px 36px}
+.toolbar,.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 5px 18px #1e293b0b}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:15px}
+button,select{font:inherit;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+button.primary{background:var(--blue);color:white}button.good{background:#0f9d72;color:white}button.light{background:#e8eef7;color:#24344c}
+select{background:#f1f5f9;color:#17243a;border:1px solid var(--line)}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(270px,.8fr);gap:15px}
+.board{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 5px 18px #1e293b0b}
+.boardtop{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:10px}.boardtop h2,.panel h2{font-size:17px;margin:0}
+.hint{font-size:12px;color:var(--muted)}
+svg{width:100%;height:auto;display:block;background-color:#f8fafc;background-image:radial-gradient(#d5deea 1px,transparent 1px);background-size:18px 18px;border-radius:12px}
+.part{filter:drop-shadow(0 4px 4px #0f172a18)}.terminal{cursor:pointer}.terminal circle:first-child{fill:#fff;stroke:#2563eb;stroke-width:3}.terminal.selected circle:first-child{fill:#fde68a;stroke:#d97706;stroke-width:4}.terminal text{font-size:12px;font-weight:800;fill:#17243a;text-anchor:middle}.wire{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;cursor:pointer}.wire:hover{stroke-width:7}
+.side{display:flex;flex-direction:column;gap:14px}.panel p{font-size:13px;line-height:1.55;color:#526176}.steps{padding-left:19px;font-size:13px;line-height:1.65}.steps li{margin:5px 0}.status{padding:12px;border-radius:12px;background:#eff6ff;color:#1e40af;font-size:13px;line-height:1.5;margin-top:10px}.status.ok{background:#dcfce7;color:#166534}.status.warn{background:#fff7ed;color:#9a3412}
+.simrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}.simrow input{flex:1;min-width:130px}.distance{font-size:22px;font-weight:900;color:#0f766e;min-width:82px}
+.led{width:22px;height:22px;border-radius:50%;background:#475569;display:inline-block;vertical-align:middle;border:3px solid #cbd5e1}.led.on{background:#facc15;box-shadow:0 0 18px #facc15}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#526176;margin-top:10px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+footer{text-align:center;color:#718096;font-size:11px;padding:18px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>🔧 Arduino Ultrasonic Wiring Lab</h1><p>Aktiviti interaktif: Sambungkan sensor ultrasonik HC-SR04, Arduino Uno dan LED</p></header>
+<main>
+<div class="toolbar">
+ <div><b>Aktiviti Sambungan</b><div class="hint">Pilih terminal pertama, kemudian terminal kedua untuk menyambungkan wayar.</div></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <select id="activity"><option value="full">Aktiviti 1 — Sambungan lengkap</option><option value="power">Aktiviti 2 — Bekalan kuasa sensor</option></select>
+  <button class="good" id="check">✓ Semak Sambungan</button><button class="primary" id="example">Tunjuk Jawapan</button><button class="light" id="clear">Padam Wayar</button>
+ </div>
+</div>
+<div class="layout">
+ <section class="board">
+  <div class="boardtop"><h2>Meja Kerja Elektronik</h2><span class="hint" id="wireCount">0 sambungan</span></div>
+  <svg id="canvas" viewBox="0 0 900 570" aria-label="Rajah sambungan elektronik">
+   <defs>
+    <linearGradient id="uno" x2="0" y2="1"><stop stop-color="#16866f"/><stop offset="1" stop-color="#075c50"/></linearGradient>
+    <linearGradient id="sensor" x2="0" y2="1"><stop stop-color="#334155"/><stop offset="1" stop-color="#111827"/></linearGradient>
+   </defs>
+   <!-- Arduino -->
+   <g class="part">
+    <rect x="300" y="115" width="310" height="330" rx="18" fill="url(#uno)" stroke="#064e3b" stroke-width="3"/>
+    <rect x="322" y="135" width="266" height="38" rx="8" fill="#0b5148"/>
+    <text x="455" y="160" fill="white" text-anchor="middle" font-size="19" font-weight="900">ARDUINO UNO</text>
+    <rect x="335" y="205" width="92" height="80" rx="8" fill="#d1d5db" stroke="#475569" stroke-width="3"/>
+    <text x="381" y="238" text-anchor="middle" font-size="12" font-weight="800" fill="#1e293b">USB</text><text x="381" y="257" text-anchor="middle" font-size="10" fill="#1e293b">TYPE B</text>
+    <rect x="458" y="210" width="105" height="70" rx="6" fill="#0f172a"/><text x="510" y="238" fill="#e2e8f0" text-anchor="middle" font-size="12">ATmega</text><text x="510" y="256" fill="#e2e8f0" text-anchor="middle" font-size="12">328P</text>
+    <circle cx="565" cy="310" r="7" fill="#facc15"/><text x="545" y="335" fill="#e2e8f0" font-size="10">ON</text>
+    <text x="455" y="410" fill="#d1fae5" text-anchor="middle" font-size="12" font-weight="700">DIGITAL I/O • POWER • GND</text>
+   </g>
+   <!-- Sensor -->
+   <g class="part">
+    <rect x="45" y="155" width="205" height="170" rx="16" fill="#dbeafe" stroke="#60a5fa" stroke-width="2"/>
+    <rect x="62" y="175" width="171" height="105" rx="12" fill="url(#sensor)"/>
+    <circle cx="111" cy="226" r="32" fill="#94a3b8" stroke="#e2e8f0" stroke-width="5"/><circle cx="184" cy="226" r="32" fill="#94a3b8" stroke="#e2e8f0" stroke-width="5"/>
+    <circle cx="111" cy="226" r="20" fill="#64748b"/><circle cx="184" cy="226" r="20" fill="#64748b"/>
+    <text x="147" y="303" text-anchor="middle" fill="#1e3a8a" font-size="14" font-weight="900">HC-SR04</text>
+    <text x="147" y="319" text-anchor="middle" fill="#1e40af" font-size="10">ULTRASONIC SENSOR</text>
+   </g>
+   <!-- LED + resistor -->
+   <g class="part">
+    <rect x="675" y="165" width="185" height="160" rx="16" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+    <text x="767" y="192" text-anchor="middle" fill="#92400e" font-size="15" font-weight="900">LED + RESISTOR</text>
+    <path d="M730 250 L752 250" stroke="#64748b" stroke-width="5"/><rect x="752" y="238" width="58" height="24" rx="5" fill="#d6b98c" stroke="#92400e" stroke-width="2"/>
+    <path d="M765 239v22 M779 239v22 M794 239v22" stroke="#92400e" stroke-width="3"/>
+    <path d="M810 250h14" stroke="#64748b" stroke-width="5"/>
+    <circle id="ledBulb" cx="835" cy="250" r="18" fill="#64748b" stroke="#334155" stroke-width="3"/>
+    <path d="M828 269v18 M842 269v18" stroke="#64748b" stroke-width="4"/>
+    <text x="767" y="308" text-anchor="middle" fill="#92400e" font-size="11">220Ω + LED</text>
+   </g>
+   <!-- object / target -->
+   <g><rect x="55" y="390" width="180" height="88" rx="12" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="2"/><text x="145" y="420" text-anchor="middle" fill="#075985" font-size="13" font-weight="800">OBJEK / SASARAN</text><rect x="105" y="435" width="80" height="28" rx="5" fill="#38bdf8"/><text x="145" y="454" text-anchor="middle" fill="#082f49" font-size="11" font-weight="800">Pantulkan</text></g>
+   <g id="wires"></g><g id="terminals"></g>
+  </svg>
+  <div class="legend"><span><i class="dot" style="background:#ef4444"></i>5V</span><span><i class="dot" style="background:#111827"></i>GND</span><span><i class="dot" style="background:#eab308"></i>Isyarat</span><span><i class="dot" style="background:#2563eb"></i>Output LED</span></div>
+ </section>
+ <aside class="side">
+  <section class="panel"><h2>🎯 Arahan Aktiviti</h2>
+   <p><b>Objektif:</b> Murid dapat menyambungkan sensor ultrasonik HC-SR04 kepada Arduino Uno dan LED dengan betul.</p>
+   <ol class="steps" id="instructions">
+    <li>HC-SR04 VCC → Arduino 5V</li><li>HC-SR04 GND → Arduino GND</li><li>HC-SR04 TRIG → Arduino D9</li><li>HC-SR04 ECHO → Arduino D10</li><li>Arduino D3 → perintang 220Ω → anod (+) LED</li><li>Katod (−) LED → Arduino GND</li>
+   </ol>
+   <div class="hint">Petua: Klik titik terminal pada komponen untuk mula menyambung wayar.</div>
+  </section>
+  <section class="panel"><h2>📡 Uji Sensor Ultrasonik</h2><p>Gerakkan jarak objek. Dalam simulasi ini, LED menyala apabila objek berada pada jarak 20 cm atau kurang.</p>
+   <div class="simrow"><input id="distance" type="range" min="2" max="100" value="45"><span class="distance" id="distanceText">45 cm</span></div>
+   <p>Status LED: <span class="led" id="ledStatus"></span> <b id="ledText">PADAM</b></p>
+   <div class="status" id="simStatus">Sambungkan litar dengan betul dan tekan “Uji Sensor”.</div>
+   <button class="primary" id="test" style="width:100%;margin-top:10px">▶ Uji Sensor</button>
+  </section>
+  <section class="panel"><h2>💡 Maklumat Komponen</h2><p><b>HC-SR04:</b> Mengukur jarak objek menggunakan gelombang ultrasonik.</p><p><b>Arduino Uno:</b> Memproses bacaan sensor dan mengawal output.</p><p><b>LED:</b> Menunjukkan keadaan objek berdasarkan jarak yang ditetapkan.</p><p><b>Perintang 220Ω:</b> Mengehadkan arus yang mengalir melalui LED.</p></section>
+ </aside>
+</div>
+<div class="panel" style="margin-top:15px"><h2>📝 Maklum Balas Semakan</h2><div class="status" id="feedback">Sediakan sambungan dan tekan “Semak Sambungan”.</div></div>
+</main><footer>Arduino Ultrasonic Wiring Lab • Simulasi pembelajaran — bukan pengganti semakan litar fizikal.</footer>
+<script>
+const T=[
+{id:'VCC',x:75,y:340,label:'VCC',group:'sensor'},{id:'TRIG',x:125,y:340,label:'TRIG',group:'sensor'},{id:'ECHO',x:175,y:340,label:'ECHO',group:'sensor'},{id:'SGND',x:225,y:340,label:'GND',group:'sensor'},
+{id:'5V',x:350,y:470,label:'5V',group:'arduino'},{id:'GND1',x:405,y:470,label:'GND',group:'arduino'},{id:'D9',x:465,y:470,label:'D9',group:'arduino'},{id:'D10',x:520,y:470,label:'D10',group:'arduino'},{id:'D3',x:575,y:470,label:'D3',group:'arduino'},
+{id:'LGND',x:770,y:355,label:'LED −',group:'led'},{id:'LANODE',x:830,y:355,label:'LED +',group:'led'}
+];
+const required=[['VCC','5V'],['SGND','GND1'],['TRIG','D9'],['ECHO','D10'],['D3','LANODE'],['LGND','GND1']];
+let wires=[],start=null,activity='full';
+const ns='http://www.w3.org/2000/svg',term=document.getElementById('terminals'),wireLayer=document.getElementById('wires');
+function draw(){
+ wireLayer.innerHTML='';term.innerHTML='';
+ wires.forEach((w,i)=>{let a=T.find(t=>t.id===w[0]),b=T.find(t=>t.id===w[1]);let p=document.createElementNS(ns,'path');p.setAttribute('d',`M${a.x},${a.y} Q${(a.x+b.x)/2},${Math.min(a.y,b.y)-45} ${b.x},${b.y}`);p.setAttribute('class','wire');p.setAttribute('stroke',wireColor(w));p.addEventListener('click',()=>{wires.splice(i,1);draw()});wireLayer.appendChild(p)});
+ T.forEach(t=>{let g=document.createElementNS(ns,'g');g.setAttribute('class','terminal'+(start===t.id?' selected':''));g.innerHTML=`<circle cx="${t.x}" cy="${t.y}" r="9"/><text x="${t.x}" y="${t.y+25}">${t.label}</text>`;g.addEventListener('click',()=>{if(!start){start=t.id}else if(start!==t.id){if(!wires.some(w=>(w[0]===start&&w[1]===t.id)||(w[1]===start&&w[0]===t.id)))wires.push([start,t.id]);start=null;draw()}else start=null;draw()});term.appendChild(g)});
+ document.getElementById('wireCount').textContent=wires.length+' sambungan';
+}
+function wireColor(w){let s=w.join(' ');if(s.includes('VCC')||s.includes('5V'))return '#ef4444';if(s.includes('GND')||s.includes('SGND')||s.includes('LGND'))return '#111827';if(s.includes('D3')||s.includes('LANODE')||s.includes('LED'))return '#2563eb';return '#eab308'}
+function has(a,b){return wires.some(w=>(w[0]===a&&w[1]===b)||(w[1]===a&&w[0]===b))}
+function check(){
+ let req=activity==='power'?required.slice(0,2):required;
+ let missing=req.filter(w=>!has(...w));
+ let f=document.getElementById('feedback');
+ if(!missing.length){f.className='status ok';f.textContent='Tahniah! Semua sambungan yang diperlukan adalah betul. Anda boleh menguji bacaan sensor.'}
+ else{f.className='status warn';f.textContent='Belum lengkap. Semak sambungan: '+missing.map(w=>w[0]+' ↔ '+w[1]).join(', ')+'.'}
+}
+document.getElementById('check').onclick=check;
+document.getElementById('example').onclick=()=>{wires=(activity==='power'?required.slice(0,2):required).map(x=>[...x]);draw();check()};
+document.getElementById('clear').onclick=()=>{wires=[];start=null;draw();document.getElementById('feedback').textContent='Semua wayar telah dipadam.'};
+document.getElementById('activity').onchange=e=>{activity=e.target.value;document.getElementById('instructions').innerHTML=activity==='power'?'<li>HC-SR04 VCC → Arduino 5V</li><li>HC-SR04 GND → Arduino GND</li>':'<li>HC-SR04 VCC → Arduino 5V</li><li>HC-SR04 GND → Arduino GND</li><li>HC-SR04 TRIG → Arduino D9</li><li>HC-SR04 ECHO → Arduino D10</li><li>Arduino D3 → perintang 220Ω → anod (+) LED</li><li>Katod (−) LED → Arduino GND</li>';wires=[];draw()};
+const slider=document.getElementById('distance');slider.oninput=()=>document.getElementById('distanceText').textContent=slider.value+' cm';
+document.getElementById('test').onclick=()=>{
+ let d=+slider.value,ok=required.every(w=>has(...w));
+ if(!ok){document.getElementById('simStatus').className='status warn';document.getElementById('simStatus').textContent='Sambungan belum lengkap. Lengkapkan dan semak wayar dahulu.';return}
+ let on=d<=20;document.getElementById('ledBulb').setAttribute('fill',on?'#facc15':'#64748b');document.getElementById('ledBulb').setAttribute('filter',on?'drop-shadow(0 0 12px #facc15)':'none');document.getElementById('ledStatus').className='led'+(on?' on':'');document.getElementById('ledText').textContent=on?'MENYALA':'PADAM';document.getElementById('simStatus').className='status '+(on?'ok':'');document.getElementById('simStatus').textContent=on?`Objek dikesan pada ${d} cm. LED menyala.`:`Objek berada pada ${d} cm. LED padam kerana jarak melebihi 20 cm.`;
+};
+draw();
+</script>
+</body></html>
